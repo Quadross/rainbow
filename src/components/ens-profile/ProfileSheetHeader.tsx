@@ -28,11 +28,11 @@ import {
   useENSProfileImages,
   useFetchUniqueTokens,
   useFirstTransactionTimestamp,
+  useRainbowProfile,
 } from '@rainbow-me/hooks';
 import { useNavigation } from '@rainbow-me/navigation';
 import Routes from '@rainbow-me/routes';
 import { isENSNFTRecord, parseENSNFTRecord } from '@rainbow-me/utils';
-import { addressHashedEmoji } from '@rainbow-me/utils/profileUtils';
 
 export default function ProfileSheetHeader({
   ensName: defaultEnsName,
@@ -58,6 +58,7 @@ export default function ProfileSheetHeader({
     }
   );
   const profileAddress = profile?.primary?.address ?? '';
+  const { rainbowProfile } = useRainbowProfile(profileAddress);
   const { navigate } = useNavigation();
   const { data: uniqueTokens } = useFetchUniqueTokens({
     address: profileAddress,
@@ -148,11 +149,6 @@ export default function ProfileSheetHeader({
     ensName,
   });
 
-  const emoji = useMemo(
-    () => (profileAddress ? addressHashedEmoji(profileAddress) : ''),
-    [profileAddress]
-  );
-
   return (
     <Box
       background="body"
@@ -170,7 +166,7 @@ export default function ProfileSheetHeader({
             <Columns>
               <Column width="content">
                 <ProfileAvatar
-                  accountSymbol={emoji as string}
+                  accountSymbol={rainbowProfile?.emoji}
                   avatarUrl={avatarUrl}
                   enableZoomOnPress={enableZoomOnPressAvatar}
                   handleOnPress={onPressAvatar}
