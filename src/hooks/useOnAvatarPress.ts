@@ -6,13 +6,11 @@ import { Linking } from 'react-native';
 import { useDispatch } from 'react-redux';
 import { RainbowAccount } from '../model/wallet';
 import { useNavigation } from '../navigation/Navigation';
-import { useTheme } from '../theme/ThemeContext';
 import useAccountProfile from './useAccountProfile';
 import useENSProfile from './useENSProfile';
 import { prefetchENSProfileImages } from './useENSProfileImages';
 import useENSRegistration from './useENSRegistration';
 import useImagePicker from './useImagePicker';
-import useRainbowProfile from './useRainbowProfile';
 import useWallets from './useWallets';
 import {
   enableActionsOnReadOnlyWallet,
@@ -28,19 +26,16 @@ export default () => {
   const { wallets, selectedWallet, isReadOnlyWallet } = useWallets();
   const dispatch = useDispatch();
   const { navigate } = useNavigation();
-  const { colors } = useTheme();
   const {
     accountAddress,
+    accountColor,
     accountName,
     accountImage,
     accountENS,
   } = useAccountProfile();
-  const { rainbowProfile } = useRainbowProfile(accountAddress);
   const profilesEnabled = useExperimentalFlag(PROFILES);
   const profileEnabled = Boolean(accountENS);
-  const ensProfile = useENSProfile(accountENS, {
-    enabled: profileEnabled && profilesEnabled,
-  });
+  const ensProfile = useENSProfile(accountENS, { enabled: profileEnabled });
   const { openPicker } = useImagePicker();
 
   const onAvatarRemovePhoto = useCallback(async () => {
@@ -87,10 +82,10 @@ export default () => {
 
   const onAvatarPickEmoji = useCallback(() => {
     navigate(Routes.AVATAR_BUILDER, {
-      initialAccountColor: rainbowProfile?.color ?? colors.skeleton,
+      initialAccountColor: accountColor,
       initialAccountName: accountName,
     });
-  }, [accountName, colors.skeleton, rainbowProfile, navigate]);
+  }, [accountColor, accountName, navigate]);
 
   const onAvatarChooseImage = useCallback(async () => {
     const image = await openPicker({
@@ -114,6 +109,8 @@ export default () => {
   const { startRegistration } = useENSRegistration();
 
   const onAvatarPress = useCallback(() => {
+    if (profileEnabled && !ensProfile?.isSuccess) return;
+
     const isENSProfile =
       profilesEnabled && profileEnabled && ensProfile?.isOwner;
 
@@ -168,12 +165,6 @@ export default () => {
             onAvatarRemovePhoto();
           } else {
             onAvatarPickEmoji();
-          }
-        } else if (buttonIndex === 2) {
-          if (accountImage) {
-            onAvatarRemovePhoto();
-          } else {
-            onAvatarCreateProfile();
           }
         } else if (buttonIndex === 2 && profilesEnabled) {
           onAvatarCreateProfile();
